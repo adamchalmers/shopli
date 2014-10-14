@@ -3,13 +3,23 @@ package com.adamschalmers.shoplimono;
 import java.util.ArrayList;
 
 import android.support.v7.app.ActionBarActivity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView.MultiChoiceModeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
 	
@@ -28,6 +38,9 @@ public class MainActivity extends ActionBarActivity {
 		ingredients = new ArrayList<Ingredient>();
 		ingredients.add(new Ingredient("Salt", 500, "g"));
 		ingredients.add(new Ingredient("Garlic", 4, "cloves"));
+		ingredients.add(new Ingredient("Chives", 2, "tsp"));
+		ingredients.add(new Ingredient("Potatoes", 3, "kg"));
+		ingredients.add(new Ingredient("Chicken stock", 2, "L	"));
 		
 		// Find our views
 		urlField = (EditText) findViewById(R.id.urlField);
@@ -36,6 +49,10 @@ public class MainActivity extends ActionBarActivity {
 		// Set up the adapter
 		adapter = new IngredientAdapter(this, ingredients);
 		ingredientsList.setAdapter(adapter);
+		
+		// Set up the user input listeners
+		ingredientsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+		setupListViewListener();
 	}
 
 	@Override
@@ -62,5 +79,76 @@ public class MainActivity extends ActionBarActivity {
 		adapter.add(new Ingredient(url));
 		urlField.setText("");
 	}
+	
+	public void toggleCheckbox(View view) {
+		CheckBox checkbox = (CheckBox) view;
+		if (checkbox.isChecked()) {
+		}
+	}
+	
+	private void setupListViewListener() {
+		/**ingredientsList.setOnItemLongClickListener(new OnItemLongClickListener() {
+			public boolean onItemLongClick(AdapterView<?> parent, View view,int position,long rowId) {
+				ingredients.remove(position);
+				adapter.notifyDataSetChanged();
+				(Toast.makeText(getApplicationContext(), "Clearing", Toast.LENGTH_SHORT)).show();
+				return true;
+			}
+		});*/
+		
+		ingredientsList.setMultiChoiceModeListener(new MultiChoiceModeListener() {
+			@Override
+			public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+				mode.setTitle(ingredientsList.getCheckedItemCount() + " Selected");
+				adapter.toggleSelection(position);
+			}
+
+			@Override
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+				SparseBooleanArray selected = adapter.getSelectedIds();
+				switch (item.getItemId()) {
+				case R.id.delete:
+					for (int i = (selected.size() - 1); i >= 0; i--) {
+						if (selected.valueAt(i)) {
+							Ingredient selecteditem = adapter.getItem(selected.keyAt(i));
+							adapter.remove(selecteditem);
+						}
+					}
+					mode.finish();
+					return true;
+				case R.id.merge:
+					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+					builder.setTitle("Merge items").setMessage("Let's merge the items")
+						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								//
+							}
+						});
+					builder.create().show();
+					return true;
+				default:
+					return false;
+				}
+			}
+
+			@Override
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				mode.getMenuInflater().inflate(R.menu.activity_main, menu);
+				return true;
+			}
+
+			@Override
+			public void onDestroyActionMode(ActionMode mode) {
+				adapter.removeSelection();
+			}
+
+			@Override
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				return false;
+			}
+		});
+	}
+	
+	
 
 }

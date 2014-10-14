@@ -1,14 +1,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:background="?android:attr/activatedBackgroundIndicator"
     android:layout_height="match_parent" >
 
     <CheckBox
+        android:id="@+id/ingredientCheck"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:longClickable="true"
+        android:onClick="toggleCheckbox"
+        android:focusable="false"
+		android:focusableInTouchMode="false"
+        android:text="" />
+
+    <TextView
         android:id="@+id/ingredientName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0.68"
         android:text="Name" />
-
+    
     <TextView
         android:id="@+id/ingredientAmount"
         android:layout_width="wrap_content"

@@ -3,16 +3,21 @@ package com.adamschalmers.shoplimono;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 public class IngredientAdapter extends ArrayAdapter<Ingredient> {
 	
+	private SparseBooleanArray mSelectedItemIds;
+	
     public IngredientAdapter(Context context, ArrayList<Ingredient> Ingredients) {
        super(context, 0, Ingredients);
+       mSelectedItemIds = new SparseBooleanArray();
     }
 
     @Override
@@ -30,12 +35,39 @@ public class IngredientAdapter extends ArrayAdapter<Ingredient> {
        
        // Fill in the view with data from the Ingredient object
        ingredientName.setText(Ingredient.name);
+       
        // If the amount is actually an integer, display it as an integer (4 grams instead of 4.0 grams)
-       Object amount = (Ingredient.getAmount() == (int) Ingredient.getAmount()) ? Integer.valueOf((int)Ingredient.getAmount()) : Ingredient.getAmount();
+       Object amount = Ingredient.getAmount();
        String units = (Ingredient.getUnit() != null && Ingredient.getUnit() != "") ? " " + Ingredient.getUnit() : "";
        ingredientAmount.setText("" + amount + units);
        
        // Return the completed view to render on screen
        return convertView;
-   }
+    }
+    
+    public void toggleSelection(int position) {
+    	selectView(position, !mSelectedItemIds.get(position));
+    }
+    
+    public void selectView(int position, boolean value) {
+    	if (value) {
+    		mSelectedItemIds.put(position, value);
+    	} else {
+    		mSelectedItemIds.delete(position);
+    	}
+    	notifyDataSetChanged();
+    }
+    
+    public int getSelectedCount() {
+    	return mSelectedItemIds.size();
+    }
+    
+    public SparseBooleanArray getSelectedIds() {
+    	return mSelectedItemIds;
+    }
+    
+    public void removeSelection() {
+    	mSelectedItemIds = new SparseBooleanArray();
+    	notifyDataSetChanged();
+    }
 }
