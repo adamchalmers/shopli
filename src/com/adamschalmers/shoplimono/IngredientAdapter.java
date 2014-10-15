@@ -32,9 +32,12 @@ public class IngredientAdapter extends ArrayAdapter<Ingredient> {
        // Lookup view for data population
        TextView ingredientName = (TextView) convertView.findViewById(R.id.ingredientName);
        TextView ingredientAmount = (TextView) convertView.findViewById(R.id.ingredientAmount);
+       CheckBox ingredientCheckbox = (CheckBox) convertView.findViewById(R.id.ingredientCheck);
+       
+       ingredientCheckbox.setTag(position); // For remembering where in the list this is
        
        // Fill in the view with data from the Ingredient object
-       ingredientName.setText(Ingredient.name);
+       ingredientName.setText(Ingredient.getName());
        
        // If the amount is actually an integer, display it as an integer (4 grams instead of 4.0 grams)
        Object amount = Ingredient.getAmount();

@@ -1,10 +1,14 @@
 package com.adamschalmers.shoplimono;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import android.support.v7.app.ActionBarActivity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
@@ -27,9 +31,12 @@ import android.widget.Toast;
 public class MainActivity extends ActionBarActivity {
 	
 	ArrayList<Ingredient> ingredients;
+	ArrayList<Recipe> recipes;
 	EditText urlField;
 	IngredientAdapter adapter;
+	RecipeAdapter recipeAdapter;
 	ListView ingredientsList;
+	
 	
 
 	@Override
@@ -37,13 +44,17 @@ public class MainActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		recipes = new ArrayList<Recipe>();
+		recipes.add(new Recipe("www.taste.com/cake", "Cake", new ArrayList<Ingredient>()));
+		recipeAdapter = new RecipeAdapter(this, recipes);
+		
 		// Initialize the ingredients list
 		ingredients = new ArrayList<Ingredient>();
 		ingredients.add(new Ingredient("Salt", 500, "g"));
 		ingredients.add(new Ingredient("Garlic", 4, "cloves"));
 		ingredients.add(new Ingredient("Chives", 2, "tsp"));
 		ingredients.add(new Ingredient("Potatoes", 3, "kg"));
-		ingredients.add(new Ingredient("Chicken stock", 2, "L	"));
+		ingredients.add(new Ingredient("Chicken stock", 2, "L"));
 		
 		// Find our views
 		urlField = (EditText) findViewById(R.id.urlField);
@@ -73,29 +84,73 @@ public class MainActivity extends ActionBarActivity {
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
+		} else if (id == R.id.action_recipes) {
+			
+			// If the user clicks "show recipes", bring up an alert with a list of all recipes.
+			AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+		    builder.setTitle("Open recipe")
+		    	.setAdapter(recipeAdapter, new DialogInterface.OnClickListener() {
+		    			
+		    	// When a user clicks a recipe, open it in the web browser.
+			   public void onClick(DialogInterface dialog, int which) {
+				   String url = recipes.get(which).getUrl();
+				   Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+				   startActivity(browserIntent);
+			   }
+		    });
+		    builder.create().show();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
+	// Called when the user presses the "add" button.
 	public void addRecipe(View v) {
 		String url = urlField.getText().toString();
-		adapter.add(new Ingredient(url));
+		Recipe recipe = new Recipe(url);
+		recipes.add(recipe);
+		
+		for (Ingredient newIngredient : recipe.getIngredients()) {
+			boolean found = false;
+			
+			/* Check if the ingredient is already present in our recipe list.
+			 * If it is, just increase the quantity.*/
+			for (Ingredient ingredient : ingredients) {
+				if (ingredient.getUnit() == newIngredient.getUnit() && ingredient.getName() == newIngredient.getName()) {
+					found = true;
+					ingredient.setAmount(ingredient.getAmount() + newIngredient.getAmount());
+				}
+			}
+			// If it wasn't found, add the new ingredient.
+			if (!found) adapter.add(newIngredient);
+		}
 		urlField.setText("");
 	}
 	
+	/* 
+	 * When the user clicks the checkbox
+	 */
 	public void toggleCheckbox(View view) {
 		CheckBox checkbox = (CheckBox) view;
+		View parent = (View) checkbox.getParent();
+		TextView name = (TextView) parent.findViewById(R.id.ingredientName);
+		TextView amount = (TextView) parent.findViewById(R.id.ingredientAmount);
+		// Checked items are grey, unchecked items are black.
 		if (checkbox.isChecked()) {
+			name.setTextColor(Color.GRAY);
+			amount.setTextColor(Color.GRAY);
+		} else {
+			name.setTextColor(Color.BLACK);
+			amount.setTextColor(Color.BLACK);
 		}
 	}
 	
 	private void setupListViewListener() {
-		/**ingredientsList.setOnItemLongClickListener(new OnItemLongClickListener() {
-			public boolean onItemLongClick(AdapterView<?> parent, View view,int position,long rowId) {
+		/*ingredientsList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view,int position,long rowId) {
 				ingredients.remove(position);
 				adapter.notifyDataSetChanged();
 				(Toast.makeText(getApplicationContext(), "Clearing", Toast.LENGTH_SHORT)).show();
-				return true;
 			}
 		});*/
 		
@@ -122,6 +177,7 @@ public class MainActivity extends ActionBarActivity {
 					return true;
 					
 				case R.id.merge:
+					// Show the merge dialog box
 					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 					LayoutInflater inflater = MainActivity.this.getLayoutInflater();
 					View mergeView = inflater.inflate(R.layout.merge, null);
@@ -180,7 +236,7 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-				mode.getMenuInflater().inflate(R.menu.activity_main, menu);
+				mode.getMenuInflater().inflate(R.menu.longclick_menu, menu);
 				return true;
 			}
 
@@ -194,6 +250,7 @@ public class MainActivity extends ActionBarActivity {
 				return false;
 			}
 		});
+		
 	}
 	
 	
