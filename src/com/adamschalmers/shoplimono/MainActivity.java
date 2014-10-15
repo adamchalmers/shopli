@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +20,8 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
@@ -104,9 +107,10 @@ public class MainActivity extends ActionBarActivity {
 			}
 
 			@Override
-			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
 				SparseBooleanArray selected = adapter.getSelectedIds();
 				switch (item.getItemId()) {
+				
 				case R.id.delete:
 					for (int i = (selected.size() - 1); i >= 0; i--) {
 						if (selected.valueAt(i)) {
@@ -116,18 +120,61 @@ public class MainActivity extends ActionBarActivity {
 					}
 					mode.finish();
 					return true;
+					
 				case R.id.merge:
 					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+					LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+					View mergeView = inflater.inflate(R.layout.merge, null);
+					
+					// Set up the dialog box
 					builder.setTitle("Merge items").setMessage("Let's merge the items")
+					
 						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								
+								// Delete the old items
+								SparseBooleanArray selected = adapter.getSelectedIds();
+								for (int i = (selected.size() - 1); i >= 0; i--) {
+									if (selected.valueAt(i)) {
+										Ingredient selecteditem = adapter.getItem(selected.keyAt(i));
+										adapter.remove(selecteditem);
+									}
+								}
+								
+								// Add one new merged item from the user's input
+								AlertDialog _dialog = (AlertDialog) dialog;
+								Spinner _units = ((Spinner) _dialog.findViewById(R.id.unitsSpinner));
+								TextView tv = (TextView) _units.getSelectedView();
+								String units = tv.getText().toString();
+								String name = ((EditText) _dialog.findViewById(R.id.mergeName)).getText().toString();
+								Double amount = Double.parseDouble(((EditText) _dialog.findViewById(R.id.mergeQuantity)).getText().toString());
+								
+								Ingredient merged = new Ingredient(name, amount, units);
+								adapter.add(merged);
+								mode.finish();
+							}
+							
+						}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
 								//
 							}
-						});
-					builder.create().show();
+						}).setView(mergeView);
+					AlertDialog dialog = builder.create();
+					
+					// Set up the spinner
+					Spinner spinner = (Spinner) mergeView.findViewById(R.id.unitsSpinner);
+					ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
+							getApplicationContext(), R.array.units, R.layout.spinner_item);
+					spinnerAdapter.setDropDownViewResource(R.layout.spinner_item);
+					spinner.setAdapter(spinnerAdapter);
+					
+					// Create the dialog and finish
+					dialog.show();
 					return true;
+					
 				default:
 					return false;
+					
 				}
 			}
 

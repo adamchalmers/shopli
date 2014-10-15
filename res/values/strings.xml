@@ -4,5 +4,12 @@
     <string name="app_name">ShopliMono</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string-array name="units">
+        <item>Grams</item>
+        <item>Litres</item>
+        <item>Cups</item>
+        <item>Teaspoons</item>
+        <item>Tablespoons</item>
+    </string-array>
 
 </resources>
