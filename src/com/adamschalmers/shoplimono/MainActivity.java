@@ -49,23 +49,24 @@ public class MainActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		recipes = readRecipesFromDb();
+		// Initialize recipes list
+		readRecipesFromDb();
 		recipeAdapter = new RecipeAdapter(this, recipes);
 		
 		// Initialize the ingredients list
-		ingredients = readIngredientsFromDb();
+		readIngredientsFromDb();
 		
 		// Find our views
-		urlField = (EditText) findViewById(R.id.urlField);
 		ingredientsList = (ListView) findViewById(R.id.ingredientsList);
 		
 		// Set up the adapter
 		adapter = new IngredientAdapter(this, ingredients);
 		ingredientsList.setAdapter(adapter);
 		
-		// Set up the user input listeners
+		// Set up the UI
 		ingredientsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 		setupListViewListener();
+		urlField = (EditText) findViewById(R.id.urlField);
 		
 		/* 
 		 * Handle intents and shares
@@ -97,10 +98,10 @@ public class MainActivity extends ActionBarActivity {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		switch (id) {
+		case R.id.action_settings:
 			return true;
-		} else if (id == R.id.action_recipes) {
-			
+		case R.id.action_recipes:
 			// If the user clicks "show recipes", bring up an alert with a list of all recipes.
 			AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 		    builder.setTitle("Open recipe")
@@ -114,6 +115,19 @@ public class MainActivity extends ActionBarActivity {
 			   }
 		    });
 		    builder.create().show();
+			return true;
+		case R.id.action_clear_recipes:
+			recipeAdapter.clear();
+			saveToDb();
+			return true;
+		case R.id.action_testdata:
+			adapter.add(Ingredient.makeNew("Salt", 500, "g"));
+			adapter.add(Ingredient.makeNew("Garlic", 4, "cloves"));
+			adapter.add(Ingredient.makeNew("Chives", 2, "tsp"));
+			adapter.add(Ingredient.makeNew("Potatoes", 3, "kg"));
+			adapter.add(Ingredient.makeNew("Chicken stock", 2, "L"));
+			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Cake", ingredients));
+			saveToDb();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -147,7 +161,7 @@ public class MainActivity extends ActionBarActivity {
 			// If it wasn't found, add the new ingredient.
 			if (!found) adapter.add(newIngredient);
 		}
-		this.saveToDb(ingredients, recipes);
+		this.saveToDb();
 		urlField.setText("");
 	}
 	
@@ -198,7 +212,7 @@ public class MainActivity extends ActionBarActivity {
 							adapter.remove(selecteditem);
 						}
 					}
-					saveToDb(ingredients, recipes);
+					saveToDb();
 					mode.finish();
 					return true;
 					
@@ -233,7 +247,7 @@ public class MainActivity extends ActionBarActivity {
 								
 								Ingredient merged = Ingredient.makeNew(name, amount, units);
 								adapter.add(merged);
-								saveToDb(ingredients, recipes);
+								saveToDb();
 								mode.finish();
 							}
 							
@@ -298,45 +312,33 @@ public class MainActivity extends ActionBarActivity {
 	/*
 	 * Data persistance: load ingredients from database
 	 */
-	private ArrayList<Ingredient> readIngredientsFromDb() {
+	private void readIngredientsFromDb() {
 		List<Ingredient> itemsFromDb = new Select().from(Ingredient.class).execute();
-		ArrayList<Ingredient> _ingredients = new ArrayList<Ingredient>();
+		ingredients = new ArrayList<Ingredient>();
 		if (itemsFromDb != null && itemsFromDb.size() > 0) {
 			for (Ingredient ing : itemsFromDb) {
-				_ingredients.add(ing);
+				ingredients.add(ing);
 			}
-		} else {
-			_ingredients.add(Ingredient.makeNew("Salt", 500, "g"));
-			_ingredients.add(Ingredient.makeNew("Garlic", 4, "cloves"));
-			_ingredients.add(Ingredient.makeNew("Chives", 2, "tsp"));
-			_ingredients.add(Ingredient.makeNew("Potatoes", 3, "kg"));
-			_ingredients.add(Ingredient.makeNew("Chicken stock", 2, "L"));
 		}
-		return _ingredients;
 	}
-	
-	
 	
 	/*
 	 * Data persistance: load recipes from database
 	 */
-	private ArrayList<Recipe> readRecipesFromDb() {
+	private void readRecipesFromDb() {
 		List<Recipe> itemsFromDb = new Select().from(Recipe.class).execute();
-		ArrayList<Recipe> _recipes = new ArrayList<Recipe>();
+		recipes = new ArrayList<Recipe>();
 		if (itemsFromDb != null && itemsFromDb.size() > 0) {
 			for (Recipe r : itemsFromDb) {
-				_recipes.add(r);
+				recipes.add(r);
 			}
-		} else {
-			_recipes.add(new Recipe("www.taste.com/cake", "Cake", new ArrayList<Ingredient>()));
 		}
-		return _recipes;
 	}
 	
 	/* 
 	 * Save ingredients and recipes to the database
 	 */
-	private void saveToDb(ArrayList<Ingredient> ingredients, ArrayList<Recipe> recipes) {
+	private void saveToDb() {
 		new Delete().from(Ingredient.class).execute();
 		new Delete().from(Recipe.class).execute();
 		
