@@ -67,6 +67,19 @@ public class MainActivity extends ActionBarActivity {
 		// Set up the user input listeners
 		ingredientsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 		setupListViewListener();
+		
+		/* 
+		 * Handle intents and shares
+		 */
+		Intent intent = getIntent();
+	    String action = intent.getAction();
+	    String type = intent.getType();
+
+	    if (Intent.ACTION_SEND.equals(action) && type != null) {
+	        if ("text/plain".equals(type)) {
+	            handleSendText(intent); // Handle text being sent
+	        }
+	    }
 	}
 
 	@Override
@@ -107,6 +120,10 @@ public class MainActivity extends ActionBarActivity {
 	// Called when the user presses the "add" button.
 	public void addRecipe(View v) {
 		String url = urlField.getText().toString();
+		addRecipeFromUrl(url);
+	}
+	
+	public void addRecipeFromUrl(String url) {
 		Recipe recipe = new Recipe(url);
 		recipes.add(recipe);
 		
@@ -253,6 +270,20 @@ public class MainActivity extends ActionBarActivity {
 		
 	}
 	
+	/*
+	 * Called if the user opens a URL with this app. 
+	 * We should add the URL's recipe to the list.
+	 */
+	void handleSendText(Intent intent) {
+	    String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+	    if (sharedText != null) {
+	    	if (sharedText.startsWith("http://") || sharedText.startsWith("https://")) {
+	    		this.addRecipeFromUrl(sharedText);
+	    	} else {
+	    		Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
+	    	}
+	    }
+	}
 	
 
 }
