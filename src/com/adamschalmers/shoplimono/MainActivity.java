@@ -2,6 +2,11 @@ package com.adamschalmers.shoplimono;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.query.Delete;
+import com.activeandroid.query.Select;
 
 import android.support.v7.app.ActionBarActivity;
 import android.app.AlertDialog;
@@ -44,17 +49,11 @@ public class MainActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		recipes = new ArrayList<Recipe>();
-		recipes.add(new Recipe("www.taste.com/cake", "Cake", new ArrayList<Ingredient>()));
+		recipes = readRecipesFromDb();
 		recipeAdapter = new RecipeAdapter(this, recipes);
 		
 		// Initialize the ingredients list
-		ingredients = new ArrayList<Ingredient>();
-		ingredients.add(new Ingredient("Salt", 500, "g"));
-		ingredients.add(new Ingredient("Garlic", 4, "cloves"));
-		ingredients.add(new Ingredient("Chives", 2, "tsp"));
-		ingredients.add(new Ingredient("Potatoes", 3, "kg"));
-		ingredients.add(new Ingredient("Chicken stock", 2, "L"));
+		ingredients = readIngredientsFromDb();
 		
 		// Find our views
 		urlField = (EditText) findViewById(R.id.urlField);
@@ -77,7 +76,10 @@ public class MainActivity extends ActionBarActivity {
 
 	    if (Intent.ACTION_SEND.equals(action) && type != null) {
 	        if ("text/plain".equals(type)) {
-	            handleSendText(intent); // Handle text being sent
+	        	//TODO: This should be handled in a second activity.
+	            handleSendText(intent);
+	            setResult(1);
+	            finish();
 	        }
 	    }
 	}
@@ -141,6 +143,7 @@ public class MainActivity extends ActionBarActivity {
 			// If it wasn't found, add the new ingredient.
 			if (!found) adapter.add(newIngredient);
 		}
+		this.saveToDb(ingredients, recipes);
 		urlField.setText("");
 	}
 	
@@ -163,6 +166,7 @@ public class MainActivity extends ActionBarActivity {
 	}
 	
 	private void setupListViewListener() {
+		//TODO: Make this display a pop-up with different units
 		/*ingredientsList.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view,int position,long rowId) {
 				ingredients.remove(position);
@@ -190,6 +194,7 @@ public class MainActivity extends ActionBarActivity {
 							adapter.remove(selecteditem);
 						}
 					}
+					saveToDb(ingredients, recipes);
 					mode.finish();
 					return true;
 					
@@ -222,8 +227,9 @@ public class MainActivity extends ActionBarActivity {
 								String name = ((EditText) _dialog.findViewById(R.id.mergeName)).getText().toString();
 								Double amount = Double.parseDouble(((EditText) _dialog.findViewById(R.id.mergeQuantity)).getText().toString());
 								
-								Ingredient merged = new Ingredient(name, amount, units);
+								Ingredient merged = Ingredient.makeNew(name, amount, units);
 								adapter.add(merged);
+								saveToDb(ingredients, recipes);
 								mode.finish();
 							}
 							
@@ -278,11 +284,71 @@ public class MainActivity extends ActionBarActivity {
 	    String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
 	    if (sharedText != null) {
 	    	if (sharedText.startsWith("http://") || sharedText.startsWith("https://")) {
-	    		this.addRecipeFromUrl(sharedText);
+	    		addRecipeFromUrl(sharedText);
 	    	} else {
 	    		Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
 	    	}
 	    }
+	}
+	
+	/*
+	 * Data persistance: load ingredients from database
+	 */
+	private ArrayList<Ingredient> readIngredientsFromDb() {
+		List<Ingredient> itemsFromDb = new Select().from(Ingredient.class).execute();
+		ArrayList<Ingredient> _ingredients = new ArrayList<Ingredient>();
+		if (itemsFromDb != null && itemsFromDb.size() > 0) {
+			for (Ingredient ing : itemsFromDb) {
+				_ingredients.add(ing);
+			}
+		} else {
+			_ingredients.add(Ingredient.makeNew("Salt", 500, "g"));
+			_ingredients.add(Ingredient.makeNew("Garlic", 4, "cloves"));
+			_ingredients.add(Ingredient.makeNew("Chives", 2, "tsp"));
+			_ingredients.add(Ingredient.makeNew("Potatoes", 3, "kg"));
+			_ingredients.add(Ingredient.makeNew("Chicken stock", 2, "L"));
+		}
+		return _ingredients;
+	}
+	
+	
+	
+	/*
+	 * Data persistance: load recipes from database
+	 */
+	private ArrayList<Recipe> readRecipesFromDb() {
+		List<Recipe> itemsFromDb = new Select().from(Recipe.class).execute();
+		ArrayList<Recipe> _recipes = new ArrayList<Recipe>();
+		if (itemsFromDb != null && itemsFromDb.size() > 0) {
+			for (Recipe r : itemsFromDb) {
+				_recipes.add(r);
+			}
+		} else {
+			_recipes.add(new Recipe("www.taste.com/cake", "Cake", new ArrayList<Ingredient>()));
+		}
+		return _recipes;
+	}
+	
+	/* 
+	 * Save ingredients and recipes to the database
+	 */
+	private void saveToDb(ArrayList<Ingredient> ingredients, ArrayList<Recipe> recipes) {
+		new Delete().from(Ingredient.class).execute();
+		new Delete().from(Recipe.class).execute();
+		
+		ActiveAndroid.beginTransaction();
+		try {
+			for (Ingredient ing : ingredients) {
+				ing.save();
+			}
+			for (Recipe r : recipes) {
+				r.save();
+			}
+			ActiveAndroid.setTransactionSuccessful();
+		}
+		finally {
+			ActiveAndroid.endTransaction();
+		}
 	}
 	
 

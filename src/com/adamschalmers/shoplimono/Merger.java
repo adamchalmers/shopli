@@ -5,13 +5,13 @@ public class Merger {
 	public static Ingredient normalise(Ingredient ing) {
 		switch (ing.getUnit()) {
 		case "kg":
-			return new Ingredient(ing.getName(), ing.getAmount()*1000, "g");
+			return Ingredient.makeNew(ing.getName(), ing.getAmount()*1000, "g");
 		case "mg":
-			return new Ingredient(ing.getName(), ing.getAmount()/1000, "g");
+			return Ingredient.makeNew(ing.getName(), ing.getAmount()/1000, "g");
 		case "mL":
-			return new Ingredient(ing.getName(), ing.getAmount()/1000, "L");
+			return Ingredient.makeNew(ing.getName(), ing.getAmount()/1000, "L");
 		case "tbsp":
-			return new Ingredient(ing.getName(), ing.getAmount()*0.0625, "tsp");
+			return Ingredient.makeNew(ing.getName(), ing.getAmount()*0.0625, "tsp");
 		}
 		return ing;
 	}
@@ -32,7 +32,7 @@ public class Merger {
 			if (a.getName() != b.getName()) {
 				name += "/" + b.getName();
 			}
-			return new Ingredient(name, normalise(a).getAmount() + normalise(b).getAmount(), normalise(a).getUnit());
+			return Ingredient.makeNew(name, normalise(a).getAmount() + normalise(b).getAmount(), normalise(a).getUnit());
 		}
 		
 		return null;
