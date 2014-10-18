@@ -4,6 +4,7 @@
     <string name="app_name">ShopliMono</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="bad_url">That\'s not a Taste.com.au recipe</string>
     <string-array name="units">
         <item>Grams</item>
         <item>Litres</item>

@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class RecipeAdapter extends ArrayAdapter<Recipe> {
+public class RecipeAdapter extends ArrayAdapter<Recipe> { 
 	
 	public RecipeAdapter(Context context, ArrayList<Recipe> recipes) {
 		super(context, 0, recipes);

@@ -122,7 +122,11 @@ public class MainActivity extends ActionBarActivity {
 	// Called when the user presses the "add" button.
 	public void addRecipe(View v) {
 		String url = urlField.getText().toString();
-		addRecipeFromUrl(url);
+		if (Url.isTasteUrl(Url.addHttp(url))) {
+			addRecipeFromUrl(url);
+		} else {
+			Toast.makeText(getApplicationContext(), R.string.bad_url, Toast.LENGTH_SHORT).show();
+		}
 	}
 	
 	public void addRecipeFromUrl(String url) {
@@ -286,7 +290,7 @@ public class MainActivity extends ActionBarActivity {
 	    	if (Url.isTasteUrl(sharedText)) {
 	    		addRecipeFromUrl(sharedText);
 	    	} else {
-	    		Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
+	    		Toast.makeText(getApplicationContext(), R.string.bad_url, Toast.LENGTH_SHORT).show();
 	    	}
 	    }
 	}

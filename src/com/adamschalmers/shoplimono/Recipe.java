@@ -38,7 +38,7 @@ public class Recipe extends Model {
 		// TODO: turn this stub into a scraper call
 		this.ingredients = new ArrayList<Ingredient>();
 		this.ingredients.add(Ingredient.makeNew("RecipeItem", 2, "tsp"));
-		this.name = url.substring(33);
+		this.name = url.substring(20);
 	}
 	
 	public String getUrl() {
