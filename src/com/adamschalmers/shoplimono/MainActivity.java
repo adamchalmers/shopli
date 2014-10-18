@@ -283,7 +283,7 @@ public class MainActivity extends ActionBarActivity {
 	void handleSendText(Intent intent) {
 	    String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
 	    if (sharedText != null) {
-	    	if (sharedText.startsWith("http://") || sharedText.startsWith("https://")) {
+	    	if (Url.isTasteUrl(sharedText)) {
 	    		addRecipeFromUrl(sharedText);
 	    	} else {
 	    		Toast.makeText(getApplicationContext(), "Invalid URL", Toast.LENGTH_SHORT).show();
@@ -350,6 +350,5 @@ public class MainActivity extends ActionBarActivity {
 			ActiveAndroid.endTransaction();
 		}
 	}
-	
 
 }

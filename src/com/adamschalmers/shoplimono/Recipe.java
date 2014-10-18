@@ -24,10 +24,7 @@ public class Recipe extends Model {
 	 */
 	public Recipe(String url, String name, ArrayList<Ingredient> ingredients) {
 		super();
-		if (!url.startsWith("http://") && !url.startsWith("https://")) {
-			url = "http://" + url;
-		}
-		this.url = url;
+		this.url = Url.addHttp(url);
 		this.name = name;
 		this.ingredients = ingredients;
 	}
@@ -36,10 +33,7 @@ public class Recipe extends Model {
 	 * New recipe, remotely scraping URL for ingredients.
 	 */
 	public Recipe(String url) {
-		if (!url.startsWith("http://") && !url.startsWith("https://")) {
-			url = "http://" + url;
-		}
-		this.url = url;
+		this.url = Url.addHttp(url);
 		
 		// TODO: turn this stub into a scraper call
 		this.ingredients = new ArrayList<Ingredient>();
