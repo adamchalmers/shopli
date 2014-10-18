@@ -2,6 +2,8 @@ package com.adamschalmers.shoplimono;
 
 import java.util.ArrayList;
 
+import com.activeandroid.query.Delete;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,4 +36,21 @@ public class RecipeAdapter extends ArrayAdapter<Recipe> {
        return convertView;
     }
 
+	@Override
+	public void add(Recipe r) {
+		super.add(r);
+		r.save();
+	}
+	
+	@Override
+	public void remove(Recipe r) {
+		super.remove(r);
+		r.delete();
+	}
+	
+	@Override
+	public void clear() {
+		super.clear();
+		new Delete().from(Recipe.class).execute();
+	}
 }

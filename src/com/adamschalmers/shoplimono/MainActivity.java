@@ -38,7 +38,7 @@ public class MainActivity extends ActionBarActivity {
 	ArrayList<Ingredient> ingredients;
 	ArrayList<Recipe> recipes;
 	EditText urlField;
-	IngredientAdapter adapter;
+	IngredientAdapter ingredientAdapter;
 	RecipeAdapter recipeAdapter;
 	ListView ingredientsList;
 	
@@ -60,8 +60,8 @@ public class MainActivity extends ActionBarActivity {
 		ingredientsList = (ListView) findViewById(R.id.ingredientsList);
 		
 		// Set up the adapter
-		adapter = new IngredientAdapter(this, ingredients);
-		ingredientsList.setAdapter(adapter);
+		ingredientAdapter = new IngredientAdapter(this, ingredients);
+		ingredientsList.setAdapter(ingredientAdapter);
 		
 		// Set up the UI
 		ingredientsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
@@ -118,16 +118,16 @@ public class MainActivity extends ActionBarActivity {
 			return true;
 		case R.id.action_clear_recipes:
 			recipeAdapter.clear();
-			saveToDb();
+			dataChanged();
 			return true;
 		case R.id.action_testdata:
-			adapter.add(Ingredient.makeNew("Salt", 500, "g"));
-			adapter.add(Ingredient.makeNew("Garlic", 4, "cloves"));
-			adapter.add(Ingredient.makeNew("Chives", 2, "tsp"));
-			adapter.add(Ingredient.makeNew("Potatoes", 3, "kg"));
-			adapter.add(Ingredient.makeNew("Chicken stock", 2, "L"));
+			ingredientAdapter.add(Ingredient.makeNew("Salt", 500, "g"));
+			ingredientAdapter.add(Ingredient.makeNew("Garlic", 4, "cloves"));
+			ingredientAdapter.add(Ingredient.makeNew("Chives", 2, "tsp"));
+			ingredientAdapter.add(Ingredient.makeNew("Potatoes", 3, "kg"));
+			ingredientAdapter.add(Ingredient.makeNew("Chicken stock", 2, "L"));
 			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Cake", ingredients));
-			saveToDb();
+			dataChanged();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -145,23 +145,24 @@ public class MainActivity extends ActionBarActivity {
 	
 	public void addRecipeFromUrl(String url) {
 		Recipe recipe = new Recipe(url);
-		recipes.add(recipe);
+		recipeAdapter.add(recipe);
 		
 		for (Ingredient newIngredient : recipe.getIngredients()) {
 			boolean found = false;
 			
 			/* Check if the ingredient is already present in our recipe list.
 			 * If it is, just increase the quantity.*/
-			for (Ingredient ingredient : ingredients) {
-				if (ingredient.getUnit() == newIngredient.getUnit() && ingredient.getName() == newIngredient.getName()) {
+			for (int i = 0, n = ingredientAdapter.getCount(); i < n; i++) {
+				Ingredient ing = ingredientAdapter.getItem(i);
+				if (ing.getUnit().equals(newIngredient.getUnit()) && ing.getName().equals(newIngredient.getName())) {
 					found = true;
-					ingredient.setAmount(ingredient.getAmount() + newIngredient.getAmount());
+					ing.setAmount(ing.getAmount() + newIngredient.getAmount());
 				}
 			}
 			// If it wasn't found, add the new ingredient.
-			if (!found) adapter.add(newIngredient);
+			if (!found) ingredientAdapter.add(newIngredient);
 		}
-		this.saveToDb();
+		dataChanged();
 		urlField.setText("");
 	}
 	
@@ -185,34 +186,28 @@ public class MainActivity extends ActionBarActivity {
 	
 	private void setupListViewListener() {
 		//TODO: Make this display a pop-up with different units
-		/*ingredientsList.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> parent, View view,int position,long rowId) {
-				ingredients.remove(position);
-				adapter.notifyDataSetChanged();
-				(Toast.makeText(getApplicationContext(), "Clearing", Toast.LENGTH_SHORT)).show();
-			}
-		});*/
+		//ingredientsList.setOnItemClickListener(new OnItemClickListener() {}
 		
 		ingredientsList.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 			@Override
 			public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
 				mode.setTitle(ingredientsList.getCheckedItemCount() + " Selected");
-				adapter.toggleSelection(position);
+				ingredientAdapter.toggleSelection(position);
 			}
 
 			@Override
 			public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
-				SparseBooleanArray selected = adapter.getSelectedIds();
+				SparseBooleanArray selected = ingredientAdapter.getSelectedIds();
 				switch (item.getItemId()) {
 				
 				case R.id.delete:
 					for (int i = (selected.size() - 1); i >= 0; i--) {
 						if (selected.valueAt(i)) {
-							Ingredient selecteditem = adapter.getItem(selected.keyAt(i));
-							adapter.remove(selecteditem);
+							Ingredient selecteditem = ingredientAdapter.getItem(selected.keyAt(i));
+							ingredientAdapter.remove(selecteditem);
 						}
 					}
-					saveToDb();
+					dataChanged();
 					mode.finish();
 					return true;
 					
@@ -229,11 +224,11 @@ public class MainActivity extends ActionBarActivity {
 							public void onClick(DialogInterface dialog, int id) {
 								
 								// Delete the old items
-								SparseBooleanArray selected = adapter.getSelectedIds();
+								SparseBooleanArray selected = ingredientAdapter.getSelectedIds();
 								for (int i = (selected.size() - 1); i >= 0; i--) {
 									if (selected.valueAt(i)) {
-										Ingredient selecteditem = adapter.getItem(selected.keyAt(i));
-										adapter.remove(selecteditem);
+										Ingredient selecteditem = ingredientAdapter.getItem(selected.keyAt(i));
+										ingredientAdapter.remove(selecteditem);
 									}
 								}
 								
@@ -246,8 +241,8 @@ public class MainActivity extends ActionBarActivity {
 								Double amount = Double.parseDouble(((EditText) _dialog.findViewById(R.id.mergeQuantity)).getText().toString());
 								
 								Ingredient merged = Ingredient.makeNew(name, amount, units);
-								adapter.add(merged);
-								saveToDb();
+								ingredientAdapter.add(merged);
+								dataChanged();
 								mode.finish();
 							}
 							
@@ -283,7 +278,7 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			public void onDestroyActionMode(ActionMode mode) {
-				adapter.removeSelection();
+				ingredientAdapter.removeSelection();
 			}
 
 			@Override
@@ -335,26 +330,9 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 	
-	/* 
-	 * Save ingredients and recipes to the database
-	 */
-	private void saveToDb() {
-		new Delete().from(Ingredient.class).execute();
-		new Delete().from(Recipe.class).execute();
-		
-		ActiveAndroid.beginTransaction();
-		try {
-			for (Ingredient ing : ingredients) {
-				ing.save();
-			}
-			for (Recipe r : recipes) {
-				r.save();
-			}
-			ActiveAndroid.setTransactionSuccessful();
-		}
-		finally {
-			ActiveAndroid.endTransaction();
-		}
+	public void dataChanged() {
+		ingredientAdapter.notifyDataSetChanged();
+		recipeAdapter.notifyDataSetChanged();
 	}
 
 }

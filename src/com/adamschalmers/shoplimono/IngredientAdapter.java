@@ -73,4 +73,14 @@ public class IngredientAdapter extends ArrayAdapter<Ingredient> {
     	mSelectedItemIds = new SparseBooleanArray();
     	notifyDataSetChanged();
     }
+    
+    public void add(Ingredient ing) {
+    	super.add(ing);
+    	ing.save();
+    }
+    
+    public void remove(Ingredient ing) {
+    	super.remove(ing);
+    	ing.delete();
+    }
 }

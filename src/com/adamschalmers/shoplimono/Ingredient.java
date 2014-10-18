@@ -49,5 +49,6 @@ public class Ingredient extends Model {
 	
 	public void setAmount(double amount) {
 		this.amount = amount;
+		this.save();
 	}
 }
