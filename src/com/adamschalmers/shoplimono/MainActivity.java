@@ -179,6 +179,8 @@ public class MainActivity extends ActionBarActivity {
 		View parent = (View) checkbox.getParent();
 		TextView name = (TextView) parent.findViewById(R.id.ingredientName);
 		TextView amount = (TextView) parent.findViewById(R.id.ingredientAmount);
+		int position = ingredientsList.getPositionForView(view);
+		
 		// Checked items are grey, unchecked items are black.
 		if (checkbox.isChecked()) {
 			name.setTextColor(Color.GRAY);
@@ -187,7 +189,7 @@ public class MainActivity extends ActionBarActivity {
 			name.setTextColor(Color.BLACK);
 			amount.setTextColor(Color.BLACK);
 		}
-		//TODO: Call the ingredient's .check() or .uncheck() here
+		ingredientAdapter.getItem(position).setChecked(checkbox.isChecked());
 	}
 	
 	private void setupListViewListener() {

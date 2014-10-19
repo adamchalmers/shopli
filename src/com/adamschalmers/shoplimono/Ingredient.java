@@ -49,18 +49,17 @@ public class Ingredient extends Model {
 		return name;
 	}
 	
+	public boolean getChecked() {
+		return checked;
+	}
+	
 	public void setAmount(double amount) {
 		this.amount = amount;
 		this.save();
 	}
 	
-	public void check() {
-		checked = true;
-		this.save();
-	}
-	
-	public void uncheck() {
-		checked = false;
+	public void setChecked(boolean checked) {
+		this.checked = checked;
 		this.save();
 	}
 }

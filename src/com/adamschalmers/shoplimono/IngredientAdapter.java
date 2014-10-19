@@ -3,6 +3,7 @@ package com.adamschalmers.shoplimono;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,6 +44,12 @@ public class IngredientAdapter extends ArrayAdapter<Ingredient> {
        Object amount = Ingredient.getAmount();
        String units = (Ingredient.getUnit() != null && Ingredient.getUnit() != "") ? " " + Ingredient.getUnit() : "";
        ingredientAmount.setText("" + amount + units);
+       
+       // Set text to grey and checkbox checked if the Ingredient's .checked property is true
+       ingredientCheckbox.setChecked(Ingredient.getChecked());
+       int color = (Ingredient.getChecked()) ? Color.GRAY : Color.BLACK;
+       ingredientName.setTextColor(color);
+       ingredientAmount.setTextColor(color);
        
        // Return the completed view to render on screen
        return convertView;
