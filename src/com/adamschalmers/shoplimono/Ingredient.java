@@ -18,6 +18,8 @@ public class Ingredient extends Model {
 	private String unit;
 	@Column(name = "name")
 	private String name;
+	@Column(name = "checked")
+	private boolean checked = false;
 	
 	/*
 	 * ActiveAndroid models need default constructors. 
@@ -49,6 +51,16 @@ public class Ingredient extends Model {
 	
 	public void setAmount(double amount) {
 		this.amount = amount;
+		this.save();
+	}
+	
+	public void check() {
+		checked = true;
+		this.save();
+	}
+	
+	public void uncheck() {
+		checked = false;
 		this.save();
 	}
 }

@@ -129,6 +129,11 @@ public class MainActivity extends ActionBarActivity {
 			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Cake", ingredients));
 			dataChanged();
 			return true;
+		case R.id.action_wipe:
+			ingredientAdapter.clear();
+			recipeAdapter.clear();
+			deleteDatabase("Shopli.db");
+			finish();
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -182,6 +187,7 @@ public class MainActivity extends ActionBarActivity {
 			name.setTextColor(Color.BLACK);
 			amount.setTextColor(Color.BLACK);
 		}
+		//TODO: Call the ingredient's .check() or .uncheck() here
 	}
 	
 	private void setupListViewListener() {

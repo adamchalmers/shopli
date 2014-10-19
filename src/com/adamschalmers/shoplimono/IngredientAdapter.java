@@ -47,7 +47,7 @@ public class IngredientAdapter extends ArrayAdapter<Ingredient> {
        // Return the completed view to render on screen
        return convertView;
     }
-    
+       
     public void toggleSelection(int position) {
     	selectView(position, !mSelectedItemIds.get(position));
     }

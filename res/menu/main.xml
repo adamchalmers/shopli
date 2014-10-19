@@ -19,6 +19,11 @@
         android:title="Insert test data"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_wipe"
+        android:orderInCategory="100"
+        android:title="Wipe DB and data"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
