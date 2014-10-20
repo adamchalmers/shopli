@@ -236,6 +236,7 @@ int drawable abc_textfield_searchview_holo_light 0x7f020054
 int drawable abc_textfield_searchview_right_holo_dark 0x7f020055
 int drawable abc_textfield_searchview_right_holo_light 0x7f020056
 int drawable ic_launcher 0x7f020057
+int id action_add_ingredient 0x7f05004f
 int id action_bar 0x7f05001c
 int id action_bar_activity_content 0x7f050015
 int id action_bar_container 0x7f05001b
@@ -243,13 +244,14 @@ int id action_bar_overlay_layout 0x7f05001f
 int id action_bar_root 0x7f05001a
 int id action_bar_subtitle 0x7f050023
 int id action_bar_title 0x7f050022
+int id action_clear_checked_ingredients 0x7f05004e
 int id action_clear_recipes 0x7f05004b
 int id action_context_bar 0x7f05001d
 int id action_menu_divider 0x7f050016
 int id action_menu_presenter 0x7f050017
 int id action_mode_close_button 0x7f050024
 int id action_recipes 0x7f05004a
-int id action_settings 0x7f05004e
+int id action_settings 0x7f050050
 int id action_testdata 0x7f05004c
 int id action_wipe 0x7f05004d
 int id activity_chooser_view_content 0x7f050025

@@ -77,7 +77,6 @@ public class MainActivity extends ActionBarActivity {
 
 	    if (Intent.ACTION_SEND.equals(action) && type != null) {
 	        if ("text/plain".equals(type)) {
-	        	//TODO: This should be handled in a second activity.
 	            handleSendText(intent);
 	            setResult(1);
 	            finish();
@@ -101,10 +100,11 @@ public class MainActivity extends ActionBarActivity {
 		switch (id) {
 		case R.id.action_settings:
 			return true;
+			
+		// If the user clicks "show recipes", bring up an alert with a list of all recipes.
 		case R.id.action_recipes:
-			// If the user clicks "show recipes", bring up an alert with a list of all recipes.
-			AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-		    builder.setTitle("Open recipe")
+			AlertDialog.Builder recipeBuilder = new AlertDialog.Builder(MainActivity.this);
+			recipeBuilder.setTitle("Open recipe")
 		    	.setAdapter(recipeAdapter, new DialogInterface.OnClickListener() {
 		    			
 		    	// When a user clicks a recipe, open it in the web browser.
@@ -114,26 +114,91 @@ public class MainActivity extends ActionBarActivity {
 				   startActivity(browserIntent);
 			   }
 		    });
-		    builder.create().show();
+			recipeBuilder.create().show();
 			return true;
+			
+		// Remove all recipes 
 		case R.id.action_clear_recipes:
 			recipeAdapter.clear();
 			dataChanged();
 			return true;
+			
+		// Insert test ingredients and recipes
 		case R.id.action_testdata:
 			ingredientAdapter.add(Ingredient.makeNew("Salt", 500, "g"));
 			ingredientAdapter.add(Ingredient.makeNew("Garlic", 4, "cloves"));
 			ingredientAdapter.add(Ingredient.makeNew("Chives", 2, "tsp"));
 			ingredientAdapter.add(Ingredient.makeNew("Potatoes", 3, "kg"));
 			ingredientAdapter.add(Ingredient.makeNew("Chicken stock", 2, "L"));
-			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Cake", ingredients));
+			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Sultana cake", ingredients));
+			recipeAdapter.add(new Recipe("http://www.taste.com.au/recipes/cake", "Thai beef salad", new ArrayList<Ingredient>()));
 			dataChanged();
 			return true;
+			
+		// Wipe all database entries, close the app.
 		case R.id.action_wipe:
 			ingredientAdapter.clear();
 			recipeAdapter.clear();
 			deleteDatabase("Shopli.db");
 			finish();
+			
+		// Show a dialog to let the user add their own ingredient
+		case R.id.action_add_ingredient:
+			
+			// Show the merge dialog box
+			AlertDialog.Builder ingredientBuilder = new AlertDialog.Builder(MainActivity.this);
+			LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+			View mergeView = inflater.inflate(R.layout.merge, null);
+			
+			// Set up the dialog box
+			ingredientBuilder.setTitle("Add ingredient")
+			
+				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						
+						// Add one new merged item from the user's input
+						AlertDialog _dialog = (AlertDialog) dialog;
+						Spinner _units = ((Spinner) _dialog.findViewById(R.id.unitsSpinner));
+						TextView tv = (TextView) _units.getSelectedView();
+						String units = tv.getText().toString();
+						String name = ((EditText) _dialog.findViewById(R.id.mergeName)).getText().toString();
+						Double amount = Double.parseDouble(((EditText) _dialog.findViewById(R.id.mergeQuantity)).getText().toString());
+						
+						Ingredient newIng = Ingredient.makeNew(name, amount, units);
+						ingredientAdapter.add(newIng);
+						dataChanged();
+					}
+					
+				}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						//
+					}
+				}).setView(mergeView);
+			AlertDialog dialog = ingredientBuilder.create();
+			
+			// Set up the spinner
+			Spinner spinner = (Spinner) mergeView.findViewById(R.id.unitsSpinner);
+			ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
+					getApplicationContext(), R.array.units, R.layout.spinner_item);
+			spinnerAdapter.setDropDownViewResource(R.layout.spinner_item);
+			spinner.setAdapter(spinnerAdapter);
+			
+			// Create the dialog and finish
+			dialog.show();
+			return true;
+			
+			
+		// Remove all checked ingredients
+		case R.id.action_clear_checked_ingredients:
+			int i = 0;
+			while (i < ingredientAdapter.getCount()) {
+				Ingredient ing = ingredientAdapter.getItem(i);
+				if (ing.getChecked()) {
+					ingredientAdapter.remove(ing);
+				} else {
+					i++;
+				}
+			}
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -148,6 +213,8 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 	
+	// Add the recipe at the given URL, and all its ingredients to the ingredients list.
+	// If ingredients are duplicates of already-present ingredients, just increase their quantity.
 	public void addRecipeFromUrl(String url) {
 		Recipe recipe = new Recipe(url);
 		recipeAdapter.add(recipe);
@@ -172,7 +239,7 @@ public class MainActivity extends ActionBarActivity {
 	}
 	
 	/* 
-	 * When the user clicks the checkbox
+	 * When the user clicks the checkbox, update the ingredient and grey out/restore its text.
 	 */
 	public void toggleCheckbox(View view) {
 		CheckBox checkbox = (CheckBox) view;
@@ -192,6 +259,9 @@ public class MainActivity extends ActionBarActivity {
 		ingredientAdapter.getItem(position).setChecked(checkbox.isChecked());
 	}
 	
+	/*
+	 * Initializes the long-click merge/delete functionality of the main listview.
+	 */
 	private void setupListViewListener() {
 		//TODO: Make this display a pop-up with different units
 		//ingredientsList.setOnItemClickListener(new OnItemClickListener() {}
@@ -204,10 +274,15 @@ public class MainActivity extends ActionBarActivity {
 			}
 
 			@Override
+			/* 
+			 * Handle the user clicking one of the action buttons in the merge menu
+			 * @see android.view.ActionMode.Callback#onActionItemClicked(android.view.ActionMode, android.view.MenuItem)
+			 */
 			public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
 				SparseBooleanArray selected = ingredientAdapter.getSelectedIds();
 				switch (item.getItemId()) {
 				
+				// Delete the selected items
 				case R.id.delete:
 					for (int i = (selected.size() - 1); i >= 0; i--) {
 						if (selected.valueAt(i)) {
@@ -219,6 +294,7 @@ public class MainActivity extends ActionBarActivity {
 					mode.finish();
 					return true;
 					
+				// Merge the selected items
 				case R.id.merge:
 					// Show the merge dialog box
 					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -279,12 +355,14 @@ public class MainActivity extends ActionBarActivity {
 			}
 
 			@Override
+			// Create the action mode menu
 			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 				mode.getMenuInflater().inflate(R.menu.longclick_menu, menu);
 				return true;
 			}
 
 			@Override
+			// When the user exits multiselect mode, remove all selections.
 			public void onDestroyActionMode(ActionMode mode) {
 				ingredientAdapter.removeSelection();
 			}
@@ -338,7 +416,7 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 	
-	public void dataChanged() {
+	private void dataChanged() {
 		ingredientAdapter.notifyDataSetChanged();
 		recipeAdapter.notifyDataSetChanged();
 	}

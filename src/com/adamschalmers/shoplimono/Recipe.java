@@ -1,10 +1,15 @@
 package com.adamschalmers.shoplimono;
 
 import java.util.ArrayList;
+
+import android.util.Log;
+
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
+import org.json.*;
 
+//{"name": "Oven-baked chicken and chorizo paella", "ingredients": [{"amount": "1/2", "name": "saffron threads ", "unit": "teaspoon"}, {"amount": "2", "name": "boiling water ", "unit": "tablespoons"}, {"amount": "8", "name": "salt-reduced chicken stock ", "unit": "cups"}, {"amount": "2", "name": "olive oil ", "unit": "teaspoons"}, {"amount": "2", "name": "chorizo, sliced ", "unit": "(110g)"}, {"amount": "1", "name": "chicken drumettes ", "unit": "kg"}, {"amount": "2", "name": "smoked paprika ", "unit": "tablespoons"}, {"amount": "2", "name": "onions, chopped ", "unit": "brown"}, {"amount": "3", "name": "cloves, crushed ", "unit": "garlic"}, {"amount": "4", "name": "SunRice Arborio Risotto Rice ", "unit": "cups"}, {"amount": "2", "name": "frozen peas ", "unit": "cups"}, {"amount": "200", "name": "chargrilled capsicum, sliced ", "unit": "g"}, {"amount": "2", "name": "tomatoes, diced ", "unit": "medium"}, {"amount": "1/2", "name": "fresh flat-leaf parsley, roughly chopped ", "unit": "cup"}, {"amount": "2", "name": "cut into 12 wedges ", "unit": "lemons,"}]}
 
 @Table(name = "Recipes")
 public class Recipe extends Model {
@@ -36,9 +41,10 @@ public class Recipe extends Model {
 		this.url = Url.addHttp(url);
 		
 		// TODO: turn this stub into a scraper call
-		this.ingredients = new ArrayList<Ingredient>();
+		String json = getJson(url);
+		this.name = parseName(json);
+		this.ingredients = parseIngredients(json);
 		this.ingredients.add(Ingredient.makeNew("RecipeItem", 2, "tsp"));
-		this.name = url.substring(20);
 	}
 	
 	public String getUrl() {
@@ -50,6 +56,67 @@ public class Recipe extends Model {
 	}
 	
 	public ArrayList<Ingredient> getIngredients() {
+		return ingredients;
+	}
+	
+	/*
+	 * Looks up the recipe URL on our scraper service.
+	 * Returns the ingredients in JSON form.
+	 */
+	private String getJson(String url) {
+		return "{'name': 'Oven-baked chicken and chorizo paella', 'ingredients': [{'amount': '1/2', 'name': 'saffron threads ', 'unit': 'teaspoon'}, {'amount': '2', 'name': 'boiling water ', 'unit': 'tablespoons'}, {'amount': '8', 'name': 'salt-reduced chicken stock ', 'unit': 'cups'}, {'amount': '2', 'name': 'olive oil ', 'unit': 'teaspoons'}, {'amount': '2', 'name': 'chorizo, sliced ', 'unit': '(110g)'}, {'amount': '1', 'name': 'chicken drumettes ', 'unit': 'kg'}, {'amount': '2', 'name': 'smoked paprika ', 'unit': 'tablespoons'}, {'amount': '2', 'name': 'onions, chopped ', 'unit': 'brown'}, {'amount': '3', 'name': 'cloves, crushed ', 'unit': 'garlic'}, {'amount': '4', 'name': 'SunRice Arborio Risotto Rice ', 'unit': 'cups'}, {'amount': '2', 'name': 'frozen peas ', 'unit': 'cups'}, {'amount': '200', 'name': 'chargrilled capsicum, sliced ', 'unit': 'g'}, {'amount': '2', 'name': 'tomatoes, diced ', 'unit': 'medium'}, {'amount': '1/2', 'name': 'fresh flat-leaf parsley, roughly chopped ', 'unit': 'cup'}, {'amount': '2', 'name': 'cut into 12 wedges ', 'unit': 'lemons,'}]}";
+	}
+	
+	/*
+	 * Parses the recipe's name from JSON
+	 */
+	private String parseName(String json) {
+		try {
+			JSONObject obj = new JSONObject(json);
+			String recipeName = obj.getString("name");
+			return recipeName;
+		} catch (JSONException e) {
+			Log.w("MainActivity - Recipe.parseName", "Failure.");
+			return "FailName";
+		}
+	}
+	
+	/*
+	 * Parses an ingredient list from JSON
+	 */
+	private ArrayList<Ingredient> parseIngredients(String json) {
+		ArrayList<Ingredient> ingredients = new ArrayList<Ingredient>();
+		try {
+			JSONObject obj = new JSONObject(json);
+			JSONArray jsonIngredients = obj.getJSONArray("ingredients");
+			for (int i = 0; i < jsonIngredients.length(); i++) {
+				JSONObject ing = jsonIngredients.getJSONObject(i);
+				String name = ing.getString("name");
+				double amount;
+				String units;
+				try {
+					amount = Double.parseDouble(ing.getString("amount"));
+					units = ing.getString("unit");
+				} catch (NumberFormatException e) {
+					if (ing.getString("amount").equals("1/2")) {
+						amount = 0.5;
+						units = ing.getString("unit");
+					} else if (ing.getString("amount").equals("3/4")) {
+						amount = 0.75;
+						units = ing.getString("unit");
+					} else if (ing.getString("amount").equals("1/4")) {
+						amount = 0.25;
+						units = ing.getString("unit");
+					} else {
+						amount = 0;
+						units = ing.getString("amount") + " " + ing.getString("unit");
+					}
+				}
+				ingredients.add(Ingredient.makeNew(name, amount, units));
+			}
+		} catch (JSONException e) {
+			Log.w("MainActivity - Recipe.parseIngredients", "Parse failed.");
+		}
 		return ingredients;
 	}
 }
