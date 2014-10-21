@@ -1,6 +1,12 @@
 package com.adamschalmers.shoplimono;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import android.util.Log;
 
@@ -18,6 +24,8 @@ public class Recipe extends Model {
 	@Column(name = "name")
 	private String name;
 	private ArrayList<Ingredient> ingredients;
+	
+	private String parserService = "http://ec2-54-66-196-222.ap-southeast-2.compute.amazonaws.com/recipe/";
 	
 	// Default constructor for Model - don't use for making Recipes!
 	public Recipe() {
@@ -40,11 +48,15 @@ public class Recipe extends Model {
 	public Recipe(String url) {
 		this.url = Url.addHttp(url);
 		
-		// TODO: turn this stub into a scraper call
 		String json = getJson(url);
-		this.name = parseName(json);
-		this.ingredients = parseIngredients(json);
-		this.ingredients.add(Ingredient.makeNew("RecipeItem", 2, "tsp"));
+		if (json == null) {
+			this.name = "ERROR";
+			this.ingredients = new ArrayList<Ingredient>();
+		} else {
+			this.name = parseName(json);
+			this.ingredients = parseIngredients(json);
+			this.ingredients.add(Ingredient.makeNew("RecipeItem", 2, "tsp"));
+		}
 	}
 	
 	public String getUrl() {
@@ -64,6 +76,29 @@ public class Recipe extends Model {
 	 * Returns the ingredients in JSON form.
 	 */
 	private String getJson(String url) {
+		/*
+		// Parser service can't handle slashes in recipe URL,
+		// so replace them with ~'s
+		url = this.parserService + url.replace("/", "~");
+		URL request;
+		try {
+			request = new URL(url);
+			Log.e("recipe", url.toString());
+			try {
+				
+				// Get the service's response
+				 BufferedReader in = new BufferedReader(new InputStreamReader(request.openStream()));
+				String response = in.readLine();
+				return response;
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			}
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+			return null;
+		}*/
 		return "{'name': 'Oven-baked chicken and chorizo paella', 'ingredients': [{'amount': '1/2', 'name': 'saffron threads ', 'unit': 'teaspoon'}, {'amount': '2', 'name': 'boiling water ', 'unit': 'tablespoons'}, {'amount': '8', 'name': 'salt-reduced chicken stock ', 'unit': 'cups'}, {'amount': '2', 'name': 'olive oil ', 'unit': 'teaspoons'}, {'amount': '2', 'name': 'chorizo, sliced ', 'unit': '(110g)'}, {'amount': '1', 'name': 'chicken drumettes ', 'unit': 'kg'}, {'amount': '2', 'name': 'smoked paprika ', 'unit': 'tablespoons'}, {'amount': '2', 'name': 'onions, chopped ', 'unit': 'brown'}, {'amount': '3', 'name': 'cloves, crushed ', 'unit': 'garlic'}, {'amount': '4', 'name': 'SunRice Arborio Risotto Rice ', 'unit': 'cups'}, {'amount': '2', 'name': 'frozen peas ', 'unit': 'cups'}, {'amount': '200', 'name': 'chargrilled capsicum, sliced ', 'unit': 'g'}, {'amount': '2', 'name': 'tomatoes, diced ', 'unit': 'medium'}, {'amount': '1/2', 'name': 'fresh flat-leaf parsley, roughly chopped ', 'unit': 'cup'}, {'amount': '2', 'name': 'cut into 12 wedges ', 'unit': 'lemons,'}]}";
 	}
 	
